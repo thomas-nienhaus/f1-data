@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>F1 Dashboard</title>
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <div class="logo">F1 <span>Dashboard</span></div>
+    <div class="controls">
+      <select id="season-select">
+        <option value="">Seizoen...</option>
+      </select>
+      <select id="event-select" disabled>
+        <option value="">Race...</option>
+      </select>
+      <button id="load-btn" disabled>Laden</button>
+    </div>
+  </header>
+
+  <div id="loading" class="loading hidden">
+    <div class="spinner"></div>
+    <p id="loading-text">Data ophalen...</p>
+  </div>
+
+  <main id="main" class="hidden">
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="standings">Klassement</button>
+      <button class="tab-btn" data-tab="laps">Rondetijden</button>
+      <button class="tab-btn" data-tab="telemetry">Telemetrie</button>
+      <button class="tab-btn" data-tab="strategy">Bandenstrategie</button>
+    </nav>
+
+    <section id="tab-standings" class="tab-content active">
+      <h2>Rijderskampioenschap <span id="standings-year"></span></h2>
+      <div id="chart-standings"></div>
+    </section>
+
+    <section id="tab-laps" class="tab-content">
+      <h2>Rondetijden</h2>
+      <div class="driver-filter">
+        <span>Coureurs:</span>
+        <div id="driver-toggles"></div>
+      </div>
+      <div id="chart-laps"></div>
+    </section>
+
+    <section id="tab-telemetry" class="tab-content">
+      <h2>Telemetrie – snelste ronde</h2>
+      <div class="driver-filter">
+        <label for="tel-driver-select">Coureur:</label>
+        <select id="tel-driver-select"></select>
+        <button id="tel-load-btn">Toon telemetrie</button>
+      </div>
+      <div id="chart-telemetry"></div>
+    </section>
+
+    <section id="tab-strategy" class="tab-content">
+      <h2>Bandenstrategie</h2>
+      <div id="chart-strategy"></div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
