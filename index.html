@@ -17,18 +17,10 @@
   <main>
     <!-- VIEW: Dashboard -->
     <section data-view="dashboard">
-      <div class="stats-grid">
+      <div class="dashboard-global-stats">
         <div class="stat-card">
           <span class="stat-value" id="stat-total">0</span>
           <span class="stat-label">Totaal woorden</span>
-        </div>
-        <div class="stat-card stat-card--highlight">
-          <span class="stat-value" id="stat-due">0</span>
-          <span class="stat-label">Te herhalen vandaag</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-value" id="stat-learned">0</span>
-          <span class="stat-label">Geleerd</span>
         </div>
         <div class="stat-card">
           <span class="stat-value" id="stat-streak">0</span>
@@ -36,50 +28,90 @@
         </div>
       </div>
 
-      <div class="action-buttons">
-        <button class="btn btn--primary btn--large" data-action="start-session" id="start-session-btn">
-          Sessie starten
-        </button>
-        <button class="btn btn--secondary" data-action="manage-words">
-          Woorden beheren
+      <div class="section-header">
+        <h2>Mijn lijsten</h2>
+        <button class="btn btn--secondary btn--sm" data-action="new-list">+ Nieuwe lijst</button>
+      </div>
+
+      <div id="list-cards" class="list-cards">
+        <!-- Rendered by ui.js -->
+      </div>
+
+      <div class="action-buttons" style="margin-top:1.5rem">
+        <button class="btn btn--primary btn--large" id="start-all-btn" data-action="start-all-session">
+          Alle lijsten starten
         </button>
       </div>
     </section>
 
-    <!-- VIEW: Word List -->
-    <section data-view="word-list" hidden>
-      <h2>Woorden beheren</h2>
-
-      <form class="add-word-form" data-action="add-word">
-        <div class="form-row">
-          <input
-            class="input"
-            name="source"
-            type="text"
-            placeholder="Spaans woord (bijv. gato)"
-            autocomplete="off"
-            required
-          >
-          <span class="form-arrow">→</span>
-          <input
-            class="input"
-            name="translation"
-            type="text"
-            placeholder="Nederlandse vertaling (bijv. kat)"
-            autocomplete="off"
-            required
-          >
-          <button class="btn btn--primary" type="submit">Toevoegen</button>
+    <!-- VIEW: List Detail -->
+    <section data-view="list-detail" hidden>
+      <div class="list-detail-header">
+        <input
+          class="input list-name-input"
+          id="list-detail-name"
+          type="text"
+          placeholder="Naam van de lijst"
+        >
+        <input type="hidden" id="list-detail-id">
+        <div class="list-detail-header-actions">
+          <button class="btn btn--sm btn--primary" data-action="save-list-name">Naam opslaan</button>
+          <button class="btn btn--sm btn--danger"  data-action="delete-list">Verwijder lijst</button>
         </div>
-      </form>
+      </div>
 
-      <ul class="word-list" id="word-list-items">
-        <!-- Rendered by ui.js -->
-      </ul>
+      <!-- Bulk add -->
+      <div class="bulk-add-section">
+        <h3>Woorden toevoegen</h3>
 
-      <p class="empty-state" id="word-list-empty" hidden>
-        Geen woorden nog. Voeg je eerste woord toe hierboven!
-      </p>
+        <div class="bulk-tabs">
+          <button class="bulk-tab bulk-tab--active" data-action="bulk-tab" data-tab="text">Tekst invoer</button>
+          <button class="bulk-tab" data-action="bulk-tab" data-tab="csv">CSV importeren</button>
+        </div>
+
+        <div id="bulk-tab-text">
+          <p class="bulk-hint">Voer één woord per regel in: <code>bronwoord = vertaling</code></p>
+          <textarea
+            class="input bulk-textarea"
+            id="bulk-textarea"
+            rows="5"
+            placeholder="gato = kat&#10;perro = hond&#10;casa = huis"
+          ></textarea>
+          <button class="btn btn--secondary" data-action="parse-bulk">Bekijk voorvertoning</button>
+        </div>
+
+        <div id="bulk-tab-csv" hidden>
+          <p class="bulk-hint">
+            Selecteer een CSV-bestand met twee kolommen (gescheiden door <code>,</code> of <code>;</code>).
+            Maximaal 500 woorden per import.
+          </p>
+          <label class="file-label">
+            <input type="file" id="csv-file-input" accept=".csv,.txt" class="file-input-hidden">
+            <span class="btn btn--secondary">Kies CSV-bestand</span>
+            <span class="file-name" id="csv-file-name">Geen bestand gekozen</span>
+          </label>
+          <button class="btn btn--secondary" data-action="parse-csv" style="margin-top:0.5rem">Bekijk voorvertoning</button>
+        </div>
+
+        <div id="bulk-preview" hidden></div>
+        <button class="btn btn--primary" id="bulk-confirm-btn" data-action="confirm-bulk" hidden disabled>
+          Woorden toevoegen
+        </button>
+      </div>
+
+      <!-- Word list -->
+      <div class="list-words-section">
+        <div class="section-header">
+          <h3>Woorden in deze lijst</h3>
+          <button class="btn btn--sm btn--primary" id="list-session-btn" data-action="start-list-session">
+            Sessie starten
+          </button>
+        </div>
+        <ul class="word-list" id="list-word-items"></ul>
+        <p class="empty-state" id="list-word-empty" hidden>
+          Nog geen woorden. Voeg ze toe via de invoer hierboven.
+        </p>
+      </div>
     </section>
 
     <!-- VIEW: Session -->
@@ -94,7 +126,7 @@
       <div class="flashcard" id="flashcard">
         <div class="flashcard__inner">
           <div class="flashcard__front">
-            <p class="card-lang-label">Spaans</p>
+            <p class="card-lang-label">Bronwoord</p>
             <p class="card-word" id="session-word"></p>
             <div class="answer-area">
               <input
@@ -126,12 +158,8 @@
               </div>
             </div>
             <div class="result-actions">
-              <button class="btn btn--success" data-action="confirm-correct">
-                Ik had het goed ✓
-              </button>
-              <button class="btn btn--danger" data-action="confirm-wrong">
-                Ik had het fout ✗
-              </button>
+              <button class="btn btn--success" data-action="confirm-correct">Ik had het goed ✓</button>
+              <button class="btn btn--danger"  data-action="confirm-wrong">Ik had het fout ✗</button>
             </div>
           </div>
         </div>
@@ -143,15 +171,25 @@
       <div class="complete-card">
         <div class="complete-icon">🎉</div>
         <h2>Sessie klaar!</h2>
-        <div class="summary-grid" id="session-summary">
-          <!-- Rendered by ui.js -->
-        </div>
+        <div class="summary-grid" id="session-summary"></div>
         <button class="btn btn--primary btn--large" data-action="go-dashboard">
           Terug naar dashboard
         </button>
       </div>
     </section>
   </main>
+
+  <!-- New list dialog -->
+  <div class="modal-backdrop" id="new-list-modal" hidden>
+    <div class="modal">
+      <h3>Nieuwe lijst aanmaken</h3>
+      <input class="input" id="new-list-name" type="text" placeholder="Bijv. Week 1" maxlength="60">
+      <div class="modal-actions">
+        <button class="btn btn--primary"   data-action="confirm-new-list">Aanmaken</button>
+        <button class="btn btn--secondary" data-action="cancel-new-list">Annuleer</button>
+      </div>
+    </div>
+  </div>
 
   <div class="toast" id="toast" hidden></div>
 

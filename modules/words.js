@@ -18,15 +18,20 @@ export function getWords() {
   return loadWords();
 }
 
+export function getWordsByList(listId) {
+  return loadWords().filter(w => w.listId === listId);
+}
+
 export function getWord(id) {
   return loadWords().find(w => w.id === id);
 }
 
-export function addWord(source, translation) {
+export function addWord(source, translation, listId) {
   const words = loadWords();
   const today = getTodayString();
   const word = {
     id: generateId(),
+    listId,
     source: source.trim(),
     translation: translation.trim(),
     createdAt: Date.now(),
@@ -35,6 +40,21 @@ export function addWord(source, translation) {
   words.push(word);
   saveWords(words);
   return word;
+}
+
+export function addWords(pairs, listId) {
+  const existing = loadWords();
+  const today = getTodayString();
+  const newWords = pairs.map(({ source, translation }) => ({
+    id: generateId(),
+    listId,
+    source: source.trim(),
+    translation: translation.trim(),
+    createdAt: Date.now(),
+    sr: defaultSR(today),
+  }));
+  saveWords([...existing, ...newWords]);
+  return newWords;
 }
 
 export function updateWord(id, { source, translation }) {
@@ -47,8 +67,7 @@ export function updateWord(id, { source, translation }) {
 }
 
 export function deleteWord(id) {
-  const words = loadWords().filter(w => w.id !== id);
-  saveWords(words);
+  saveWords(loadWords().filter(w => w.id !== id));
 }
 
 export function saveWordSR(updatedWord) {
@@ -60,15 +79,16 @@ export function saveWordSR(updatedWord) {
   }
 }
 
-export function seedDefaultWords() {
-  if (loadWords().length > 0) return;
+export function seedDefaultWords(listId) {
   const today = getTodayString();
   const words = DEFAULT_WORDS.map(({ source, translation }) => ({
     id: generateId(),
+    listId,
     source,
     translation,
     createdAt: Date.now(),
     sr: defaultSR(today),
   }));
-  saveWords(words);
+  const existing = loadWords();
+  saveWords([...existing, ...words]);
 }
