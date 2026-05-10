@@ -33,9 +33,7 @@
         <button class="btn btn--secondary btn--sm" data-action="new-list">+ Nieuwe lijst</button>
       </div>
 
-      <div id="list-cards" class="list-cards">
-        <!-- Rendered by ui.js -->
-      </div>
+      <div id="list-cards" class="list-cards"></div>
 
       <div class="action-buttons" style="margin-top:1.5rem">
         <button class="btn btn--primary btn--large" id="start-all-btn" data-action="start-all-session">
@@ -47,17 +45,25 @@
     <!-- VIEW: List Detail -->
     <section data-view="list-detail" hidden>
       <div class="list-detail-header">
-        <input
-          class="input list-name-input"
-          id="list-detail-name"
-          type="text"
-          placeholder="Naam van de lijst"
-        >
+        <input class="input list-name-input" id="list-detail-name" type="text" placeholder="Naam van de lijst">
         <input type="hidden" id="list-detail-id">
         <div class="list-detail-header-actions">
           <button class="btn btn--sm btn--primary" data-action="save-list-name">Naam opslaan</button>
           <button class="btn btn--sm btn--danger"  data-action="delete-list">Verwijder lijst</button>
         </div>
+      </div>
+
+      <div class="lang-settings">
+        <div class="lang-field">
+          <label class="lang-label" for="list-source-lang">Brontaal</label>
+          <input class="input" id="list-source-lang" type="text" placeholder="bijv. Spaans">
+        </div>
+        <span class="lang-arrow">→</span>
+        <div class="lang-field">
+          <label class="lang-label" for="list-target-lang">Doeltaal</label>
+          <input class="input" id="list-target-lang" type="text" placeholder="bijv. Nederlands">
+        </div>
+        <button class="btn btn--sm btn--secondary" data-action="save-list-langs">Opslaan</button>
       </div>
 
       <!-- Bulk add -->
@@ -70,12 +76,15 @@
         </div>
 
         <div id="bulk-tab-text">
-          <p class="bulk-hint">Voer één woord per regel in: <code>bronwoord = vertaling</code></p>
+          <p class="bulk-hint">
+            Één woord per regel: <code>bronwoord = vertaling</code><br>
+            Meerdere vertalingen: <code>ciao = hallo, dag</code>
+          </p>
           <textarea
             class="input bulk-textarea"
             id="bulk-textarea"
             rows="5"
-            placeholder="gato = kat&#10;perro = hond&#10;casa = huis"
+            placeholder="gato = kat&#10;ciao = hallo, dag&#10;casa = huis"
           ></textarea>
           <button class="btn btn--secondary" data-action="parse-bulk">Bekijk voorvertoning</button>
         </div>
@@ -126,7 +135,7 @@
       <div class="flashcard" id="flashcard">
         <div class="flashcard__inner">
           <div class="flashcard__front">
-            <p class="card-lang-label">Bronwoord</p>
+            <p class="card-lang-label" id="card-source-lang"></p>
             <p class="card-word" id="session-word"></p>
             <div class="answer-area">
               <input
@@ -147,6 +156,7 @@
               <span class="result-icon" id="result-icon"></span>
               <p class="result-label" id="result-label"></p>
             </div>
+            <p class="card-lang-label card-lang-label--back" id="card-target-lang"></p>
             <div class="result-words">
               <div class="result-row">
                 <span class="result-row__label">Jouw antwoord:</span>
@@ -158,8 +168,8 @@
               </div>
             </div>
             <div class="result-actions">
-              <button class="btn btn--success" data-action="confirm-correct">Ik had het goed ✓</button>
-              <button class="btn btn--danger"  data-action="confirm-wrong">Ik had het fout ✗</button>
+              <button class="btn btn--success" id="btn-confirm-correct" data-action="confirm-correct">Ik had het goed ✓</button>
+              <button class="btn btn--danger"  id="btn-confirm-wrong"   data-action="confirm-wrong">Ik had het fout ✗</button>
             </div>
           </div>
         </div>
@@ -184,6 +194,17 @@
     <div class="modal">
       <h3>Nieuwe lijst aanmaken</h3>
       <input class="input" id="new-list-name" type="text" placeholder="Bijv. Week 1" maxlength="60">
+      <div class="lang-settings lang-settings--compact">
+        <div class="lang-field">
+          <label class="lang-label" for="new-list-source-lang">Brontaal</label>
+          <input class="input" id="new-list-source-lang" type="text" placeholder="bijv. Spaans">
+        </div>
+        <span class="lang-arrow">→</span>
+        <div class="lang-field">
+          <label class="lang-label" for="new-list-target-lang">Doeltaal</label>
+          <input class="input" id="new-list-target-lang" type="text" placeholder="bijv. Nederlands">
+        </div>
+      </div>
       <div class="modal-actions">
         <button class="btn btn--primary"   data-action="confirm-new-list">Aanmaken</button>
         <button class="btn btn--secondary" data-action="cancel-new-list">Annuleer</button>

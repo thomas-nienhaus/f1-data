@@ -40,7 +40,7 @@ export function submitAnswer(typedText) {
   const word = queue[currentIndex];
   const typed = typedText.trim().toLowerCase();
   const variants = word.translation
-    .split('/')
+    .split(/[,\/]/)
     .map(v => v.trim().toLowerCase())
     .filter(Boolean);
 

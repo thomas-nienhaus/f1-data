@@ -8,9 +8,15 @@ export function getList(id) {
   return loadLists().find(l => l.id === id);
 }
 
-export function createList(name) {
+export function createList(name, sourceLang = 'Bronwoord', targetLang = 'Vertaling') {
   const lists = loadLists();
-  const list = { id: generateId(), name: name.trim(), createdAt: Date.now() };
+  const list = {
+    id: generateId(),
+    name: name.trim(),
+    sourceLang,
+    targetLang,
+    createdAt: Date.now(),
+  };
   lists.push(list);
   saveLists(lists);
   return list;
@@ -24,13 +30,24 @@ export function renameList(id, name) {
   saveLists(lists);
 }
 
+export function updateListLangs(id, sourceLang, targetLang) {
+  const lists = loadLists();
+  const idx = lists.findIndex(l => l.id === id);
+  if (idx === -1) return;
+  lists[idx] = {
+    ...lists[idx],
+    sourceLang: sourceLang.trim() || 'Bronwoord',
+    targetLang: targetLang.trim() || 'Vertaling',
+  };
+  saveLists(lists);
+}
+
 export function deleteList(id) {
   saveLists(loadLists().filter(l => l.id !== id));
   saveWords(loadWords().filter(w => w.listId !== id));
 }
 
 // Assigns words without a listId to a new "Standaard" list.
-// Called once on app start for backward compatibility.
 export function migrateOrphanWords() {
   const words = loadWords();
   const orphans = words.filter(w => !w.listId);
@@ -38,7 +55,7 @@ export function migrateOrphanWords() {
 
   let list = loadLists().find(l => l.name === 'Standaard');
   if (!list) {
-    list = createList('Standaard');
+    list = createList('Standaard', 'Spaans', 'Nederlands');
   }
 
   const updated = words.map(w => w.listId ? w : { ...w, listId: list.id });

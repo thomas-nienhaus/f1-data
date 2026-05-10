@@ -7,18 +7,17 @@ import * as UI      from './modules/ui.js';
 // ── Bootstrap ────────────────────────────────────────────────
 Lists.migrateOrphanWords();
 
-// First-ever run: no lists yet → create "Standaard" and seed words
 if (Lists.getLists().length === 0) {
-  const defaultList = Lists.createList('Standaard');
+  const defaultList = Lists.createList('Standaard', 'Spaans', 'Nederlands');
   Words.seedDefaultWords(defaultList.id);
 }
 
 refreshDashboard();
 UI.showView('dashboard');
 
-// Active list for list-detail view
-let activeListId = null;
-// Pending bulk pairs waiting for confirmation
+// Active list for list-detail view and session
+let activeListId  = null;
+let sessionListId = null; // null = "alle lijsten"
 let pendingBulkPairs = [];
 
 // ── Event Delegation ─────────────────────────────────────────
@@ -33,7 +32,9 @@ document.addEventListener('keydown', e => {
     if (document.activeElement === document.getElementById('session-input')) {
       handleAction('submit-answer', null);
     }
-    if (document.activeElement === document.getElementById('new-list-name')) {
+    if (document.activeElement === document.getElementById('new-list-name') ||
+        document.activeElement === document.getElementById('new-list-source-lang') ||
+        document.activeElement === document.getElementById('new-list-target-lang')) {
       handleAction('confirm-new-list', null);
     }
   }
@@ -61,9 +62,11 @@ function handleAction(action, el) {
       break;
 
     case 'confirm-new-list': {
-      const name = document.getElementById('new-list-name').value.trim();
+      const name       = document.getElementById('new-list-name').value.trim();
       if (!name) return;
-      Lists.createList(name);
+      const sourceLang = document.getElementById('new-list-source-lang').value.trim();
+      const targetLang = document.getElementById('new-list-target-lang').value.trim();
+      Lists.createList(name, sourceLang || 'Bronwoord', targetLang || 'Vertaling');
       closeNewListModal();
       refreshDashboard();
       UI.showToast('Lijst aangemaakt!', 'success');
@@ -74,11 +77,9 @@ function handleAction(action, el) {
       closeNewListModal();
       break;
 
-    case 'open-list': {
-      const listId = el.dataset.listId;
-      openListDetail(listId);
+    case 'open-list':
+      openListDetail(el.dataset.listId);
       break;
-    }
 
     case 'save-list-name': {
       const id   = document.getElementById('list-detail-id').value;
@@ -86,6 +87,15 @@ function handleAction(action, el) {
       if (!name) return;
       Lists.renameList(id, name);
       UI.showToast('Naam opgeslagen', 'success');
+      break;
+    }
+
+    case 'save-list-langs': {
+      const id         = document.getElementById('list-detail-id').value;
+      const sourceLang = document.getElementById('list-source-lang').value.trim();
+      const targetLang = document.getElementById('list-target-lang').value.trim();
+      Lists.updateListLangs(id, sourceLang, targetLang);
+      UI.showToast('Taalinstellingen opgeslagen', 'success');
       break;
     }
 
@@ -167,15 +177,17 @@ function handleAction(action, el) {
     // ── Sessions ───────────────────────────────────────────
     case 'start-list-session': {
       const listId = el.dataset.listId || document.getElementById('list-detail-id').value;
+      sessionListId = listId;
       startSession(Words.getWordsByList(listId));
       break;
     }
 
     case 'start-all-session':
+      sessionListId = null;
       startSession(Words.getWords());
       break;
 
-    // ── Session actions ────────────────────────────────────
+    // ── Session flow ───────────────────────────────────────
     case 'submit-answer':
       handleSubmitAnswer();
       break;
@@ -207,10 +219,11 @@ function openListDetail(listId) {
 // ── New List Modal ───────────────────────────────────────────
 function openNewListModal() {
   const modal = document.getElementById('new-list-modal');
-  const input = document.getElementById('new-list-name');
   modal.hidden = false;
-  input.value = '';
-  input.focus();
+  document.getElementById('new-list-name').value        = '';
+  document.getElementById('new-list-source-lang').value = '';
+  document.getElementById('new-list-target-lang').value = '';
+  document.getElementById('new-list-name').focus();
 }
 
 function closeNewListModal() {
@@ -244,9 +257,10 @@ function renderCurrentCard() {
 
   const word     = Session.getCurrentWord();
   const progress = Session.getProgress();
+  const list     = sessionListId ? Lists.getList(sessionListId) : null;
 
   UI.renderProgress(progress.done, progress.total);
-  UI.renderSessionCard(word, 'question');
+  UI.renderSessionCard(word, 'question', list);
 
   const input = document.getElementById('session-input');
   input.value = '';
@@ -260,8 +274,12 @@ function handleSubmitAnswer() {
   if (!typed) { input.focus(); return; }
 
   document.getElementById('submit-btn').disabled = true;
+
   const result = Session.submitAnswer(typed);
-  UI.renderSessionCard(Session.getCurrentWord(), result.correct ? 'revealed-correct' : 'revealed-wrong');
+  const word   = Session.getCurrentWord();
+  const list   = sessionListId ? Lists.getList(sessionListId) : null;
+
+  UI.renderSessionCard(word, result.correct ? 'revealed-correct' : 'revealed-wrong', list);
   UI.showReveal(result);
 }
 
@@ -279,7 +297,6 @@ function parseTextInput(text) {
   for (const raw of text.split('\n')) {
     const line = raw.trim();
     if (!line) continue;
-
     const pair = parsePair(line);
     if (pair) {
       pairs.push(pair);
@@ -291,7 +308,6 @@ function parseTextInput(text) {
 }
 
 function parsePair(line) {
-  // Try tab separator first, then = and -
   const separators = ['\t', '=', ' - '];
   for (const sep of separators) {
     const idx = line.indexOf(sep);
@@ -313,11 +329,10 @@ function parseCSVText(text) {
     const line = lines[i].trim();
     if (!line) continue;
 
-    const sep = line.includes(';') ? ';' : ',';
+    const sep   = line.includes(';') ? ';' : ',';
     const parts = line.split(sep).map(p => p.trim().replace(/^"|"$/g, ''));
 
     if (parts.length >= 2 && parts[0] && parts[1]) {
-      // Skip likely header row (first line, both values look like labels)
       if (i === 0 && /^[a-zA-Z\s]+$/.test(parts[0]) && /^[a-zA-Z\s]+$/.test(parts[1]) && pairs.length === 0) {
         continue;
       }
@@ -340,7 +355,7 @@ async function handleParseCSV() {
   const text = await file.text();
   const { pairs, errorLines } = parseCSVText(text);
 
-  const MAX = 500;
+  const MAX    = 500;
   const capped = pairs.slice(0, MAX);
   if (pairs.length > MAX) {
     UI.showToast(`Maximaal ${MAX} woorden per import. Eerste ${MAX} worden gebruikt.`, '');
