@@ -5,11 +5,20 @@ export function getStats() {
   return loadStats();
 }
 
-export function computeDashboardStats(words) {
+export function computeListStats(words, listId) {
+  const listWords = words.filter(w => w.listId === listId);
   return {
-    total: words.length,
+    total:    listWords.length,
+    dueToday: getDueWords(listWords).length,
+    learned:  listWords.filter(w => w.sr.repetitions >= 3 && w.sr.interval >= 7).length,
+  };
+}
+
+export function computeGlobalStats(words) {
+  return {
+    total:    words.length,
     dueToday: getDueWords(words).length,
-    learned: words.filter(w => w.sr.repetitions >= 3 && w.sr.interval >= 7).length,
+    learned:  words.filter(w => w.sr.repetitions >= 3 && w.sr.interval >= 7).length,
   };
 }
 
