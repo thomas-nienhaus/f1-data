@@ -1,0 +1,38 @@
+import { loadStats, saveStats } from './store.js';
+import { getTodayString, addDays, getDueWords } from './scheduler.js';
+
+export function getStats() {
+  return loadStats();
+}
+
+export function computeDashboardStats(words) {
+  return {
+    total: words.length,
+    dueToday: getDueWords(words).length,
+    learned: words.filter(w => w.sr.repetitions >= 3 && w.sr.interval >= 7).length,
+  };
+}
+
+export function updateStreakAfterSession() {
+  const stats = loadStats();
+  const today = getTodayString();
+  const yesterday = addDays(today, -1);
+
+  if (stats.lastStudyDate === today) {
+    return;
+  } else if (stats.lastStudyDate === yesterday) {
+    stats.streak += 1;
+  } else {
+    stats.streak = 1;
+  }
+
+  stats.lastStudyDate = today;
+  saveStats(stats);
+}
+
+export function recordSessionResults(correct, wrong) {
+  const stats = loadStats();
+  stats.allTimeCorrect += correct;
+  stats.allTimeWrong += wrong;
+  saveStats(stats);
+}
