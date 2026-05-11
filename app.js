@@ -140,7 +140,13 @@ document.addEventListener('keydown', e => {
       handleAction('confirm-new-list', null);
     }
   }
-  if (e.key === 'Escape') handleAction('cancel-new-list', null);
+  if (e.key === 'Enter' && ['auth-email', 'auth-password'].includes(document.activeElement.id)) {
+    handleAction('confirm-auth', null);
+  }
+  if (e.key === 'Escape') {
+    handleAction('cancel-new-list', null);
+    handleAction('cancel-auth', null);
+  }
 });
 
 document.getElementById('csv-file-input').addEventListener('change', e => {
@@ -158,29 +164,21 @@ async function handleAction(action, el) {
       break;
 
     // ── Auth ───────────────────────────────────────────────
-    case 'link-email': {
-      const email = prompt('Voer je e-mailadres in om te synchroniseren:');
-      if (!email) break;
-      try {
-        await db.linkEmail(email);
-        UI.showToast('Bevestigingsmail verstuurd! Klik op de link in je e-mail.', 'success');
-      } catch (e) {
-        UI.showToast('Koppelen mislukt: ' + e.message, 'error');
-      }
+    case 'link-email':
+      openAuthModal('link');
       break;
-    }
 
-    case 'signin-email': {
-      const email = prompt('Voer je e-mailadres in om in te loggen:');
-      if (!email) break;
-      try {
-        await db.signInWithEmail(email);
-        UI.showToast('Inloglink verstuurd! Klik op de link in je e-mail.', 'success');
-      } catch (e) {
-        UI.showToast('Inloggen mislukt: ' + e.message, 'error');
-      }
+    case 'signin-email':
+      openAuthModal('signin');
       break;
-    }
+
+    case 'confirm-auth':
+      await handleConfirmAuth();
+      break;
+
+    case 'cancel-auth':
+      closeAuthModal();
+      break;
 
     // ── Lists ──────────────────────────────────────────────
     case 'new-list':
@@ -423,6 +421,61 @@ async function handleConfirmResult(userSaysCorrect) {
   await Session.confirmResult(userSaysCorrect);
   UI.hideReveal();
   setTimeout(renderCurrentCard, 300);
+}
+
+// ── Auth Modal ───────────────────────────────────────────────
+let authModalMode = null; // 'link' | 'signin'
+
+function openAuthModal(mode) {
+  authModalMode = mode;
+  const modal = document.getElementById('auth-modal');
+  document.getElementById('auth-modal-title').textContent =
+    mode === 'link' ? 'Account koppelen' : 'Inloggen';
+  document.getElementById('auth-email').value    = '';
+  document.getElementById('auth-password').value = '';
+  document.getElementById('auth-error').hidden   = true;
+  modal.hidden = false;
+  document.getElementById('auth-email').focus();
+}
+
+function closeAuthModal() {
+  document.getElementById('auth-modal').hidden = true;
+  authModalMode = null;
+}
+
+async function handleConfirmAuth() {
+  const email    = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errorEl  = document.getElementById('auth-error');
+
+  if (!email || !password) {
+    errorEl.textContent = 'Vul e-mailadres en wachtwoord in.';
+    errorEl.hidden = false;
+    return;
+  }
+
+  const btn = document.getElementById('auth-confirm-btn');
+  btn.disabled = true;
+
+  try {
+    if (authModalMode === 'link') {
+      await db.linkEmail(email, password);
+      closeAuthModal();
+      UI.showToast('Account gekoppeld!', 'success');
+      updateSyncStatus(await db.getCurrentUser());
+    } else {
+      await db.signInWithEmail(email, password);
+      closeAuthModal();
+      UI.showToast('Ingelogd!', 'success');
+      updateSyncStatus(await db.getCurrentUser());
+      await refreshDashboard();
+    }
+  } catch (e) {
+    errorEl.textContent = e.message;
+    errorEl.hidden = false;
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 // ── Parsing ──────────────────────────────────────────────────

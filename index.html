@@ -213,6 +213,20 @@
     </div>
   </div>
 
+  <!-- Auth dialog -->
+  <div class="modal-backdrop" id="auth-modal" hidden>
+    <div class="modal">
+      <h3 id="auth-modal-title"></h3>
+      <input class="input" id="auth-email" type="email" placeholder="E-mailadres" autocomplete="email">
+      <input class="input" id="auth-password" type="password" placeholder="Wachtwoord" autocomplete="current-password" style="margin-top:0.5rem">
+      <p class="auth-error" id="auth-error" hidden></p>
+      <div class="modal-actions">
+        <button class="btn btn--primary" id="auth-confirm-btn" data-action="confirm-auth">Bevestigen</button>
+        <button class="btn btn--secondary" data-action="cancel-auth">Annuleer</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast" hidden></div>
 
   <script type="module" src="app.js"></script>
