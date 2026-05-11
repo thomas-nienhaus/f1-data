@@ -476,6 +476,12 @@ section[hidden] { display: none; }
   justify-content: flex-end;
 }
 
+.auth-error {
+  color: var(--color-danger, #e53e3e);
+  font-size: 0.875rem;
+  margin: 0.25rem 0 0;
+}
+
 /* ── Session View ──────────────────────────────────────────── */
 .session-header {
   display: flex;

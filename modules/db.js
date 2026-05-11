@@ -21,19 +21,13 @@ export async function getCurrentUser() {
   return user;
 }
 
-export async function linkEmail(email) {
-  const { error } = await supabase.auth.updateUser(
-    { email },
-    { emailRedirectTo: window.location.origin },
-  );
+export async function linkEmail(email, password) {
+  const { error } = await supabase.auth.updateUser({ email, password });
   if (error) throw error;
 }
 
-export async function signInWithEmail(email) {
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: { shouldCreateUser: false, emailRedirectTo: window.location.origin },
-  });
+export async function signInWithEmail(email, password) {
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
 }
 
