@@ -16,21 +16,22 @@ async function bootstrap() {
   UI.showLoading(true);
   try {
     const user = await db.ensureAuth();
-    updateSyncStatus(user);
 
+    if (!user) {
+      openAuthModal('link');
+      return;
+    }
+
+    updateSyncStatus(user);
     allLists = await Lists.getLists();
     allWords = await Words.getWords();
 
-    // Eerste keer: geen lijsten → seed standaardlijst
     if (allLists.length === 0) {
       const defaultList = await Lists.createList('Standaard', 'Spaans', 'Nederlands');
       await Words.seedDefaultWords(defaultList.id);
       allLists = await Lists.getLists();
       allWords = await Words.getWords();
     }
-
-    // Migreer eventuele oude localStorage-data
-    await offerLocalStorageMigration();
 
     UI.renderDashboard(allLists, allWords, await Stats.getStats());
     UI.showView('dashboard');
@@ -430,7 +431,7 @@ function openAuthModal(mode) {
   authModalMode = mode;
   const modal = document.getElementById('auth-modal');
   document.getElementById('auth-modal-title').textContent =
-    mode === 'link' ? 'Account koppelen' : 'Inloggen';
+    mode === 'link' ? 'Account aanmaken' : 'Inloggen';
   document.getElementById('auth-email').value    = '';
   document.getElementById('auth-password').value = '';
   document.getElementById('auth-error').hidden   = true;
@@ -462,14 +463,12 @@ async function handleConfirmAuth() {
       await db.linkEmail(email, password);
       closeAuthModal();
       UI.showToast('Account aangemaakt!', 'success');
-      updateSyncStatus(await db.getCurrentUser());
     } else {
       await db.signInWithEmail(email, password);
       closeAuthModal();
       UI.showToast('Ingelogd!', 'success');
-      updateSyncStatus(await db.getCurrentUser());
-      await refreshDashboard();
     }
+    await bootstrap();
   } catch (e) {
     errorEl.textContent = e.message;
     errorEl.hidden = false;
