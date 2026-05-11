@@ -1,4 +1,4 @@
-const CACHE = 'wordlearn-v1';
+const CACHE = 'wordlearn-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -31,7 +31,9 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
-  if (url.origin !== self.location.origin) return;
-  e.respondWith(caches.match(e.request).then(cached => cached ?? fetch(e.request)));
+  try {
+    const url = new URL(e.request.url);
+    if (url.origin !== self.location.origin) return;
+    e.respondWith(caches.match(e.request).then(cached => cached ?? fetch(e.request)));
+  } catch {}
 });
