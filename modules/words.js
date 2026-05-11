@@ -1,33 +1,34 @@
-import { loadWords, saveWords, generateId } from './store.js';
+import * as db from './db.js';
 import { getTodayString, defaultSR } from './scheduler.js';
+import { generateId } from './store.js';
 
 const DEFAULT_WORDS = [
-  { source: 'gato',    translation: 'kat' },
-  { source: 'perro',   translation: 'hond' },
-  { source: 'casa',    translation: 'huis' },
-  { source: 'agua',    translation: 'water' },
-  { source: 'libro',   translation: 'boek' },
-  { source: 'tiempo',  translation: 'tijd' },
-  { source: 'amigo',   translation: 'vriend' },
-  { source: 'comer',   translation: 'eten' },
-  { source: 'grande',  translation: 'groot' },
-  { source: 'ciudad',  translation: 'stad' },
+  { source: 'gato',   translation: 'kat' },
+  { source: 'perro',  translation: 'hond' },
+  { source: 'casa',   translation: 'huis' },
+  { source: 'agua',   translation: 'water' },
+  { source: 'libro',  translation: 'boek' },
+  { source: 'tiempo', translation: 'tijd' },
+  { source: 'amigo',  translation: 'vriend' },
+  { source: 'comer',  translation: 'eten' },
+  { source: 'grande', translation: 'groot' },
+  { source: 'ciudad', translation: 'stad' },
 ];
 
-export function getWords() {
-  return loadWords();
+export async function getWords() {
+  return db.fetchWords();
 }
 
-export function getWordsByList(listId) {
-  return loadWords().filter(w => w.listId === listId);
+export async function getWordsByList(listId) {
+  const all = await db.fetchWords();
+  return all.filter(w => w.listId === listId);
 }
 
-export function getWord(id) {
-  return loadWords().find(w => w.id === id);
+export function getWordFromList(words, id) {
+  return words.find(w => w.id === id);
 }
 
-export function addWord(source, translation, listId) {
-  const words = loadWords();
+export async function addWord(source, translation, listId) {
   const today = getTodayString();
   const word = {
     id: generateId(),
@@ -37,15 +38,13 @@ export function addWord(source, translation, listId) {
     createdAt: Date.now(),
     sr: defaultSR(today),
   };
-  words.push(word);
-  saveWords(words);
-  return word;
+  const [inserted] = await db.insertWords([word]);
+  return inserted;
 }
 
-export function addWords(pairs, listId) {
-  const existing = loadWords();
+export async function addWords(pairs, listId) {
   const today = getTodayString();
-  const newWords = pairs.map(({ source, translation }) => ({
+  const words = pairs.map(({ source, translation }) => ({
     id: generateId(),
     listId,
     source: source.trim(),
@@ -53,33 +52,22 @@ export function addWords(pairs, listId) {
     createdAt: Date.now(),
     sr: defaultSR(today),
   }));
-  saveWords([...existing, ...newWords]);
-  return newWords;
+  return db.insertWords(words);
 }
 
-export function updateWord(id, { source, translation }) {
-  const words = loadWords();
-  const idx = words.findIndex(w => w.id === id);
-  if (idx === -1) return null;
-  words[idx] = { ...words[idx], source: source.trim(), translation: translation.trim() };
-  saveWords(words);
-  return words[idx];
+export async function updateWord(id, { source, translation }) {
+  await db.updateWordFields(id, { source: source.trim(), translation: translation.trim() });
 }
 
-export function deleteWord(id) {
-  saveWords(loadWords().filter(w => w.id !== id));
+export async function deleteWord(id) {
+  await db.removeWord(id);
 }
 
-export function saveWordSR(updatedWord) {
-  const words = loadWords();
-  const idx = words.findIndex(w => w.id === updatedWord.id);
-  if (idx !== -1) {
-    words[idx] = updatedWord;
-    saveWords(words);
-  }
+export async function saveWordSR(updatedWord) {
+  await db.upsertWordSR(updatedWord);
 }
 
-export function seedDefaultWords(listId) {
+export async function seedDefaultWords(listId) {
   const today = getTodayString();
   const words = DEFAULT_WORDS.map(({ source, translation }) => ({
     id: generateId(),
@@ -89,6 +77,5 @@ export function seedDefaultWords(listId) {
     createdAt: Date.now(),
     sr: defaultSR(today),
   }));
-  const existing = loadWords();
-  saveWords([...existing, ...words]);
+  await db.insertWords(words);
 }

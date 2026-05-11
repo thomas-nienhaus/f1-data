@@ -7,6 +7,12 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Loading overlay -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <p>Verbinden…</p>
+  </div>
+
   <header>
     <div class="header-inner">
       <h1>WordLearn</h1>
@@ -25,6 +31,19 @@
         <div class="stat-card">
           <span class="stat-value" id="stat-streak">0</span>
           <span class="stat-label">Dag streak 🔥</span>
+        </div>
+      </div>
+
+      <!-- Sync status -->
+      <div class="sync-panel">
+        <span class="sync-status sync-status--anon" id="sync-status">Alleen op dit apparaat</span>
+        <div class="sync-actions">
+          <button class="btn btn--sm btn--secondary" id="link-email-btn" data-action="link-email">
+            📧 Koppel e-mailadres
+          </button>
+          <button class="btn btn--sm btn--ghost" id="signin-email-btn" data-action="signin-email">
+            Log in op dit apparaat
+          </button>
         </div>
       </div>
 
@@ -69,26 +88,19 @@
       <!-- Bulk add -->
       <div class="bulk-add-section">
         <h3>Woorden toevoegen</h3>
-
         <div class="bulk-tabs">
           <button class="bulk-tab bulk-tab--active" data-action="bulk-tab" data-tab="text">Tekst invoer</button>
           <button class="bulk-tab" data-action="bulk-tab" data-tab="csv">CSV importeren</button>
         </div>
-
         <div id="bulk-tab-text">
           <p class="bulk-hint">
             Één woord per regel: <code>bronwoord = vertaling</code><br>
             Meerdere vertalingen: <code>ciao = hallo, dag</code>
           </p>
-          <textarea
-            class="input bulk-textarea"
-            id="bulk-textarea"
-            rows="5"
-            placeholder="gato = kat&#10;ciao = hallo, dag&#10;casa = huis"
-          ></textarea>
+          <textarea class="input bulk-textarea" id="bulk-textarea" rows="5"
+            placeholder="gato = kat&#10;ciao = hallo, dag&#10;casa = huis"></textarea>
           <button class="btn btn--secondary" data-action="parse-bulk">Bekijk voorvertoning</button>
         </div>
-
         <div id="bulk-tab-csv" hidden>
           <p class="bulk-hint">
             Selecteer een CSV-bestand met twee kolommen (gescheiden door <code>,</code> of <code>;</code>).
@@ -101,7 +113,6 @@
           </label>
           <button class="btn btn--secondary" data-action="parse-csv" style="margin-top:0.5rem">Bekijk voorvertoning</button>
         </div>
-
         <div id="bulk-preview" hidden></div>
         <button class="btn btn--primary" id="bulk-confirm-btn" data-action="confirm-bulk" hidden disabled>
           Woorden toevoegen
@@ -138,19 +149,11 @@
             <p class="card-lang-label" id="card-source-lang"></p>
             <p class="card-word" id="session-word"></p>
             <div class="answer-area">
-              <input
-                class="input input--large"
-                id="session-input"
-                type="text"
-                placeholder="Typ de vertaling..."
-                autocomplete="off"
-              >
-              <button class="btn btn--primary" data-action="submit-answer" id="submit-btn">
-                Controleer
-              </button>
+              <input class="input input--large" id="session-input" type="text"
+                placeholder="Typ de vertaling..." autocomplete="off">
+              <button class="btn btn--primary" data-action="submit-answer" id="submit-btn">Controleer</button>
             </div>
           </div>
-
           <div class="flashcard__back">
             <div class="result-header">
               <span class="result-icon" id="result-icon"></span>
@@ -182,9 +185,7 @@
         <div class="complete-icon">🎉</div>
         <h2>Sessie klaar!</h2>
         <div class="summary-grid" id="session-summary"></div>
-        <button class="btn btn--primary btn--large" data-action="go-dashboard">
-          Terug naar dashboard
-        </button>
+        <button class="btn btn--primary btn--large" data-action="go-dashboard">Terug naar dashboard</button>
       </div>
     </section>
   </main>

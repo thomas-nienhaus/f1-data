@@ -1,63 +1,36 @@
-import { loadLists, saveLists, loadWords, saveWords, generateId } from './store.js';
+import * as db from './db.js';
+import { generateId } from './store.js';
 
-export function getLists() {
-  return loadLists();
+export async function getLists() {
+  return db.fetchLists();
 }
 
-export function getList(id) {
-  return loadLists().find(l => l.id === id);
+export async function getList(lists, id) {
+  return lists.find(l => l.id === id) ?? null;
 }
 
-export function createList(name, sourceLang = 'Bronwoord', targetLang = 'Vertaling') {
-  const lists = loadLists();
+export async function createList(name, sourceLang = 'Bronwoord', targetLang = 'Vertaling') {
   const list = {
-    id: generateId(),
-    name: name.trim(),
-    sourceLang,
-    targetLang,
-    createdAt: Date.now(),
+    id:         generateId(),
+    name:       name.trim(),
+    sourceLang: sourceLang || 'Bronwoord',
+    targetLang: targetLang || 'Vertaling',
+    createdAt:  Date.now(),
   };
-  lists.push(list);
-  saveLists(lists);
-  return list;
+  return db.insertList(list);
 }
 
-export function renameList(id, name) {
-  const lists = loadLists();
-  const idx = lists.findIndex(l => l.id === id);
-  if (idx === -1) return;
-  lists[idx] = { ...lists[idx], name: name.trim() };
-  saveLists(lists);
+export async function renameList(id, name) {
+  await db.updateList(id, { name: name.trim() });
 }
 
-export function updateListLangs(id, sourceLang, targetLang) {
-  const lists = loadLists();
-  const idx = lists.findIndex(l => l.id === id);
-  if (idx === -1) return;
-  lists[idx] = {
-    ...lists[idx],
+export async function updateListLangs(id, sourceLang, targetLang) {
+  await db.updateList(id, {
     sourceLang: sourceLang.trim() || 'Bronwoord',
     targetLang: targetLang.trim() || 'Vertaling',
-  };
-  saveLists(lists);
+  });
 }
 
-export function deleteList(id) {
-  saveLists(loadLists().filter(l => l.id !== id));
-  saveWords(loadWords().filter(w => w.listId !== id));
-}
-
-// Assigns words without a listId to a new "Standaard" list.
-export function migrateOrphanWords() {
-  const words = loadWords();
-  const orphans = words.filter(w => !w.listId);
-  if (orphans.length === 0) return;
-
-  let list = loadLists().find(l => l.name === 'Standaard');
-  if (!list) {
-    list = createList('Standaard', 'Spaans', 'Nederlands');
-  }
-
-  const updated = words.map(w => w.listId ? w : { ...w, listId: list.id });
-  saveWords(updated);
+export async function deleteList(id) {
+  await db.removeList(id);
 }

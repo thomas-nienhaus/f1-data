@@ -49,11 +49,11 @@ export function submitAnswer(typedText) {
   return lastResult;
 }
 
-export function confirmResult(userSaysCorrect) {
+export async function confirmResult(userSaysCorrect) {
   const word = queue[currentIndex];
   const updated = applyResult(word, userSaysCorrect);
   queue[currentIndex] = updated;
-  saveWordSR(updated);
+  await saveWordSR(updated);
 
   if (userSaysCorrect) {
     sessionCorrect += 1;
