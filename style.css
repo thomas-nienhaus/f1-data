@@ -639,6 +639,67 @@ section[hidden] { display: none; }
 .toast.toast--success { background: var(--color-success); }
 .toast.toast--error   { background: var(--color-danger); }
 
+/* ── Language Settings ─────────────────────────────────────── */
+.lang-settings {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.625rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+.lang-settings--compact {
+  margin-bottom: 0;
+  margin-top: 0.5rem;
+}
+.lang-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 100px;
+}
+.lang-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.lang-arrow {
+  color: var(--color-text-muted);
+  font-size: 1.125rem;
+  padding-bottom: 0.625rem;
+  flex-shrink: 0;
+}
+
+/* ── Translation Chips ─────────────────────────────────────── */
+.translation-chip {
+  display: inline-block;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.1em 0.45em;
+  border-radius: var(--radius-sm);
+  margin: 0 0.15em 0.1em 0;
+}
+
+/* ── Override Button ───────────────────────────────────────── */
+.btn--override {
+  background: transparent !important;
+  color: inherit !important;
+  border: 2px solid currentColor;
+  opacity: 0.65;
+}
+.btn--success.btn--override { color: var(--color-success); }
+.btn--danger.btn--override  { color: var(--color-danger); }
+.btn--override:not(:disabled):hover { opacity: 1; }
+
+/* ── Card back lang label ──────────────────────────────────── */
+.card-lang-label--back {
+  color: rgba(255 255 255 / 0.75);
+}
+
 /* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 480px) {
   .card-word { font-size: 1.75rem; }
@@ -646,5 +707,7 @@ section[hidden] { display: none; }
   .result-actions { flex-direction: column; }
   .list-card { flex-direction: column; align-items: flex-start; }
   .list-detail-header { flex-direction: column; align-items: stretch; }
+  .lang-settings { flex-direction: column; }
+  .lang-arrow { padding-bottom: 0; }
   .word-sr-info { display: none; }
 }
