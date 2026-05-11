@@ -122,44 +122,44 @@ export function showEditRow(id, source, translation) {
 
 // ── Bulk Add ─────────────────────────────────────────────────
 
-export function showBulkPreview(pairs, errorLines) {
-  const preview = document.getElementById('bulk-preview');
-  preview.hidden = false;
+export function showBulkFeedback(pairs, errorLines, source = 'text') {
+  const fbId = source === 'csv' ? 'bulk-feedback-csv' : 'bulk-feedback';
+  const fb = document.getElementById(fbId);
 
-  const cap   = 5;
-  const shown = pairs.slice(0, cap);
-  const more  = pairs.length - cap;
-
-  let html = `<p class="bulk-preview__count">${pairs.length} woord${pairs.length !== 1 ? 'en' : ''} herkend</p>`;
-
-  if (shown.length > 0) {
-    html += '<table class="bulk-table"><thead><tr><th>Bronwoord</th><th></th><th>Vertaling</th></tr></thead><tbody>';
-    html += shown.map(p =>
-      `<tr><td>${escHtml(p.source)}</td><td>→</td><td>${translationChips(p.translation)}</td></tr>`
-    ).join('');
-    if (more > 0) {
-      html += `<tr><td colspan="3" class="bulk-table__more">... en ${more} meer</td></tr>`;
+  if (pairs.length === 0 && errorLines.length === 0) {
+    fb.hidden = true;
+  } else {
+    let text = pairs.length > 0
+      ? `${pairs.length} woord${pairs.length !== 1 ? 'en' : ''} herkend`
+      : '';
+    if (errorLines.length > 0) {
+      text += (text ? ' · ' : '') +
+        `${errorLines.length} regel${errorLines.length !== 1 ? 's' : ''} overgeslagen`;
     }
-    html += '</tbody></table>';
-  }
-
-  if (errorLines.length > 0) {
-    html += `<p class="bulk-preview__errors">${errorLines.length} regel${errorLines.length !== 1 ? 's' : ''} overgeslagen (geen geldig formaat)</p>`;
+    fb.textContent = text;
+    fb.className = 'bulk-feedback' + (pairs.length === 0 ? ' bulk-feedback--error' : '');
+    fb.hidden = false;
   }
 
   const confirmBtn = document.getElementById('bulk-confirm-btn');
   confirmBtn.disabled = pairs.length === 0;
-
-  preview.innerHTML = html;
-  preview.appendChild(confirmBtn);
+  confirmBtn.textContent = pairs.length > 0
+    ? `Woorden toevoegen (${pairs.length})`
+    : 'Woorden toevoegen';
 }
 
 export function clearBulkPreview() {
-  const preview = document.getElementById('bulk-preview');
-  preview.hidden = true;
-  preview.innerHTML = '';
+  ['bulk-feedback', 'bulk-feedback-csv'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.hidden = true;
+  });
   const textarea = document.getElementById('bulk-textarea');
   if (textarea) textarea.value = '';
+  const confirmBtn = document.getElementById('bulk-confirm-btn');
+  if (confirmBtn) {
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Woorden toevoegen';
+  }
 }
 
 // ── Session ──────────────────────────────────────────────────
