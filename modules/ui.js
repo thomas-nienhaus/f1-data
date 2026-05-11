@@ -1,5 +1,10 @@
 let toastTimer = null;
 
+export function showLoading(visible) {
+  const el = document.getElementById('loading-overlay');
+  if (el) el.hidden = !visible;
+}
+
 export function showView(name) {
   document.querySelectorAll('main > section').forEach(s => {
     s.hidden = s.dataset.view !== name;

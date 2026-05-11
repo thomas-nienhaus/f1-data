@@ -1,17 +1,8 @@
-import { loadStats, saveStats } from './store.js';
+import * as db from './db.js';
 import { getTodayString, addDays, getDueWords } from './scheduler.js';
 
-export function getStats() {
-  return loadStats();
-}
-
-export function computeListStats(words, listId) {
-  const listWords = words.filter(w => w.listId === listId);
-  return {
-    total:    listWords.length,
-    dueToday: getDueWords(listWords).length,
-    learned:  listWords.filter(w => w.sr.repetitions >= 3 && w.sr.interval >= 7).length,
-  };
+export async function getStats() {
+  return db.fetchStats();
 }
 
 export function computeGlobalStats(words) {
@@ -22,26 +13,21 @@ export function computeGlobalStats(words) {
   };
 }
 
-export function updateStreakAfterSession() {
-  const stats = loadStats();
-  const today = getTodayString();
+export async function updateStreakAfterSession() {
+  const stats    = await db.fetchStats();
+  const today    = getTodayString();
   const yesterday = addDays(today, -1);
 
-  if (stats.lastStudyDate === today) {
-    return;
-  } else if (stats.lastStudyDate === yesterday) {
-    stats.streak += 1;
-  } else {
-    stats.streak = 1;
-  }
+  if (stats.lastStudyDate === today) return;
 
+  stats.streak = (stats.lastStudyDate === yesterday) ? stats.streak + 1 : 1;
   stats.lastStudyDate = today;
-  saveStats(stats);
+  await db.upsertStats(stats);
 }
 
-export function recordSessionResults(correct, wrong) {
-  const stats = loadStats();
+export async function recordSessionResults(correct, wrong) {
+  const stats = await db.fetchStats();
   stats.allTimeCorrect += correct;
-  stats.allTimeWrong += wrong;
-  saveStats(stats);
+  stats.allTimeWrong   += wrong;
+  await db.upsertStats(stats);
 }

@@ -639,6 +639,67 @@ section[hidden] { display: none; }
 .toast.toast--success { background: var(--color-success); }
 .toast.toast--error   { background: var(--color-danger); }
 
+/* ── Loading Overlay ───────────────────────────────────────── */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  z-index: 500;
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
+}
+.loading-overlay[hidden] { display: none; }
+
+.loading-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Sync Panel ────────────────────────────────────────────── */
+.sync-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 0.875rem 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.sync-status {
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.sync-status::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.sync-status--anon::before   { background: var(--color-warning); }
+.sync-status--linked::before { background: var(--color-success); }
+.sync-status--anon   { color: var(--color-text-muted); }
+.sync-status--linked { color: var(--color-success); }
+
+.sync-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
 /* ── Language Settings ─────────────────────────────────────── */
 .lang-settings {
   display: flex;
