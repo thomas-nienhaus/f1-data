@@ -21,6 +21,13 @@ export async function getCurrentUser() {
   return user;
 }
 
+export async function freshAnonSession() {
+  await supabase.auth.signOut();
+  const { error } = await supabase.auth.signInAnonymously();
+  if (error) throw error;
+  return (await supabase.auth.getUser()).data.user;
+}
+
 export async function linkEmail(email, password) {
   const { error } = await supabase.auth.updateUser({ email, password });
   if (error) throw error;

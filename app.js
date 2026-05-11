@@ -463,7 +463,7 @@ async function handleConfirmAuth() {
         await db.linkEmail(email, password);
       } catch (e) {
         if (e.message.includes('JWT') || e.message.includes('not exist')) {
-          await db.ensureAuth();
+          await db.freshAnonSession();
           await db.linkEmail(email, password);
         } else {
           throw e;
