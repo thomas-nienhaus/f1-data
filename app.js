@@ -12,6 +12,22 @@ let activeListId  = null;
 let sessionListId = null;
 let pendingBulkPairs = [];
 
+function saveDataCache(lists, words) {
+  try {
+    localStorage.setItem('wl_lists', JSON.stringify(lists));
+    localStorage.setItem('wl_words', JSON.stringify(words));
+  } catch {}
+}
+
+function loadDataCache() {
+  try {
+    const lists = JSON.parse(localStorage.getItem('wl_lists'));
+    const words = JSON.parse(localStorage.getItem('wl_words'));
+    if (lists && words) return { lists, words };
+  } catch {}
+  return null;
+}
+
 async function bootstrap() {
   UI.showLoading(true);
   try {
@@ -23,14 +39,26 @@ async function bootstrap() {
     }
 
     updateSyncStatus(user);
-    allLists = await Lists.getLists();
-    allWords = await Words.getWords();
+
+    // Toon gecachede data direct zodat het scherm niet leeg blijft
+    const cached = loadDataCache();
+    if (cached) {
+      allLists = cached.lists;
+      allWords = cached.words;
+      UI.renderDashboard(allLists, allWords, await Stats.getStats());
+      UI.showView('dashboard');
+      UI.showLoading(false);
+    }
+
+    // Haal verse data parallel op
+    [allLists, allWords] = await Promise.all([Lists.getLists(), Words.getWords()]);
+    saveDataCache(allLists, allWords);
 
     if (allLists.length === 0) {
       const defaultList = await Lists.createList('Standaard', 'Spaans', 'Nederlands');
       await Words.seedDefaultWords(defaultList.id);
-      allLists = await Lists.getLists();
-      allWords = await Words.getWords();
+      [allLists, allWords] = await Promise.all([Lists.getLists(), Words.getWords()]);
+      saveDataCache(allLists, allWords);
     }
 
     UI.renderDashboard(allLists, allWords, await Stats.getStats());
