@@ -99,7 +99,7 @@
           </p>
           <textarea class="input bulk-textarea" id="bulk-textarea" rows="5"
             placeholder="gato = kat&#10;ciao = hallo, dag&#10;casa = huis"></textarea>
-          <button class="btn btn--secondary" data-action="parse-bulk">Bekijk voorvertoning</button>
+          <p id="bulk-feedback" class="bulk-feedback" hidden></p>
         </div>
         <div id="bulk-tab-csv" hidden>
           <p class="bulk-hint">
@@ -111,10 +111,9 @@
             <span class="btn btn--secondary">Kies CSV-bestand</span>
             <span class="file-name" id="csv-file-name">Geen bestand gekozen</span>
           </label>
-          <button class="btn btn--secondary" data-action="parse-csv" style="margin-top:0.5rem">Bekijk voorvertoning</button>
+          <p id="bulk-feedback-csv" class="bulk-feedback" hidden></p>
         </div>
-        <div id="bulk-preview" hidden></div>
-        <button class="btn btn--primary" id="bulk-confirm-btn" data-action="confirm-bulk" hidden disabled>
+        <button class="btn btn--primary" id="bulk-confirm-btn" data-action="confirm-bulk" disabled style="margin-top:0.875rem">
           Woorden toevoegen
         </button>
       </div>

@@ -150,9 +150,14 @@ document.addEventListener('keydown', e => {
   }
 });
 
-document.getElementById('csv-file-input').addEventListener('change', e => {
+document.getElementById('bulk-textarea').addEventListener('input', () => {
+  handleAction('parse-bulk', null);
+});
+
+document.getElementById('csv-file-input').addEventListener('change', async e => {
   const file = e.target.files[0];
   document.getElementById('csv-file-name').textContent = file ? file.name : 'Geen bestand gekozen';
+  if (file) await handleAction('parse-csv', null);
 });
 
 // ── Action Handler ───────────────────────────────────────────
@@ -251,8 +256,7 @@ async function handleAction(action, el) {
       const text = document.getElementById('bulk-textarea').value;
       const { pairs, errorLines } = parseTextInput(text);
       pendingBulkPairs = pairs;
-      UI.showBulkPreview(pairs, errorLines);
-      document.getElementById('bulk-confirm-btn').hidden = pairs.length === 0;
+      UI.showBulkFeedback(pairs, errorLines, 'text');
       break;
     }
 
@@ -266,7 +270,6 @@ async function handleAction(action, el) {
       const count = pendingBulkPairs.length;
       pendingBulkPairs = [];
       UI.clearBulkPreview();
-      document.getElementById('bulk-confirm-btn').hidden = true;
       await openListDetail(activeListId);
       UI.showToast(`${count} woord${count !== 1 ? 'en' : ''} toegevoegd!`, 'success');
       break;
@@ -528,6 +531,5 @@ async function handleParseCSV() {
   const capped = pairs.slice(0, MAX);
   if (pairs.length > MAX) UI.showToast(`Maximaal ${MAX} woorden. Eerste ${MAX} gebruikt.`, '');
   pendingBulkPairs = capped;
-  UI.showBulkPreview(capped, errorLines);
-  document.getElementById('bulk-confirm-btn').hidden = capped.length === 0;
+  UI.showBulkFeedback(capped, errorLines, 'csv');
 }
