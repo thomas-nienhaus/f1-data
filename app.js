@@ -459,18 +459,9 @@ async function handleConfirmAuth() {
 
   try {
     if (authModalMode === 'link') {
-      try {
-        await db.linkEmail(email, password);
-      } catch (e) {
-        if (e.message.includes('JWT') || e.message.includes('not exist')) {
-          await db.freshAnonSession();
-          await db.linkEmail(email, password);
-        } else {
-          throw e;
-        }
-      }
+      await db.linkEmail(email, password);
       closeAuthModal();
-      UI.showToast('Account gekoppeld!', 'success');
+      UI.showToast('Account aangemaakt!', 'success');
       updateSyncStatus(await db.getCurrentUser());
     } else {
       await db.signInWithEmail(email, password);
