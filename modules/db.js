@@ -17,14 +17,16 @@ export async function ensureAuth() {
 }
 
 export async function getCurrentUser() {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user;
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return null;
+  return (await supabase.auth.getUser()).data.user;
 }
 
 export async function linkEmail(email, password) {
-  await supabase.auth.signOut();
-  const { error } = await supabase.auth.signUp({ email, password });
+  await supabase.auth.signOut({ scope: 'local' });
+  const { data, error } = await supabase.auth.signUp({ email, password });
   if (error) throw error;
+  if (!data.session) throw new Error('E-mailbevestiging is nog ingeschakeld in Supabase. Zet "Confirm email" uit onder Authentication → Sign In / Up.');
 }
 
 export async function signInWithEmail(email, password) {
