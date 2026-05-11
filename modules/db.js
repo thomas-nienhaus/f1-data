@@ -22,14 +22,17 @@ export async function getCurrentUser() {
 }
 
 export async function linkEmail(email) {
-  const { error } = await supabase.auth.updateUser({ email });
+  const { error } = await supabase.auth.updateUser(
+    { email },
+    { emailRedirectTo: window.location.origin },
+  );
   if (error) throw error;
 }
 
 export async function signInWithEmail(email) {
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { shouldCreateUser: false },
+    options: { shouldCreateUser: false, emailRedirectTo: window.location.origin },
   });
   if (error) throw error;
 }
