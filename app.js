@@ -345,7 +345,7 @@ async function refreshDashboard() {
 // ── List Detail ──────────────────────────────────────────────
 async function openListDetail(listId) {
   activeListId = listId;
-  const list      = Lists.getList(allLists, listId);
+  const list      = await Lists.getList(allLists, listId);
   const listWords = await Words.getWordsByList(listId);
   UI.renderListDetail(list, listWords);
   UI.showView('list-detail');
