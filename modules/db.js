@@ -10,7 +10,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 export async function ensureAuth() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return null;
-  return (await supabase.auth.getUser()).data.user;
+  return session.user;
 }
 
 export async function getCurrentUser() {

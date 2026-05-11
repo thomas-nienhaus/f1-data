@@ -12,10 +12,11 @@ let activeListId  = null;
 let sessionListId = null;
 let pendingBulkPairs = [];
 
-function saveDataCache(lists, words) {
+function saveDataCache(lists, words, stats) {
   try {
     localStorage.setItem('wl_lists', JSON.stringify(lists));
     localStorage.setItem('wl_words', JSON.stringify(words));
+    localStorage.setItem('wl_stats', JSON.stringify(stats));
   } catch {}
 }
 
@@ -23,49 +24,54 @@ function loadDataCache() {
   try {
     const lists = JSON.parse(localStorage.getItem('wl_lists'));
     const words = JSON.parse(localStorage.getItem('wl_words'));
-    if (lists && words) return { lists, words };
+    const stats = JSON.parse(localStorage.getItem('wl_stats'))
+                  ?? { streak: 0, lastStudyDate: null, allTimeCorrect: 0, allTimeWrong: 0 };
+    if (lists && words) return { lists, words, stats };
   } catch {}
   return null;
 }
 
 async function bootstrap() {
   UI.showLoading(true);
+  let shownFromCache = false;
   try {
     const user = await db.ensureAuth();
-
-    if (!user) {
-      openAuthModal('link');
-      return;
-    }
-
+    if (!user) { openAuthModal('link'); return; }
     updateSyncStatus(user);
 
-    // Toon gecachede data direct zodat het scherm niet leeg blijft
+    // Direct tonen vanuit cache — geen Supabase-call nodig
     const cached = loadDataCache();
     if (cached) {
       allLists = cached.lists;
       allWords = cached.words;
-      UI.renderDashboard(allLists, allWords, await Stats.getStats());
+      UI.renderDashboard(allLists, allWords, cached.stats);
       UI.showView('dashboard');
       UI.showLoading(false);
+      shownFromCache = true;
     }
 
-    // Haal verse data parallel op
-    [allLists, allWords] = await Promise.all([Lists.getLists(), Words.getWords()]);
-    saveDataCache(allLists, allWords);
+    // Verse data parallel ophalen
+    const [freshLists, freshWords, freshStats] = await Promise.all([
+      Lists.getLists(), Words.getWords(), Stats.getStats(),
+    ]);
+    allLists = freshLists;
+    allWords = freshWords;
+    saveDataCache(allLists, allWords, freshStats);
 
     if (allLists.length === 0) {
       const defaultList = await Lists.createList('Standaard', 'Spaans', 'Nederlands');
       await Words.seedDefaultWords(defaultList.id);
       [allLists, allWords] = await Promise.all([Lists.getLists(), Words.getWords()]);
-      saveDataCache(allLists, allWords);
+      saveDataCache(allLists, allWords, freshStats);
     }
 
-    UI.renderDashboard(allLists, allWords, await Stats.getStats());
+    UI.renderDashboard(allLists, allWords, freshStats);
     UI.showView('dashboard');
   } catch (e) {
     console.error('Bootstrap mislukt:', e);
-    UI.showToast('Verbindingsprobleem. Probeer de pagina te herladen.', 'error');
+    if (!shownFromCache) {
+      UI.showToast('Verbindingsprobleem. Probeer de pagina te herladen.', 'error');
+    }
   } finally {
     UI.showLoading(false);
   }
