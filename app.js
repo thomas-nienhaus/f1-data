@@ -459,7 +459,16 @@ async function handleConfirmAuth() {
 
   try {
     if (authModalMode === 'link') {
-      await db.linkEmail(email, password);
+      try {
+        await db.linkEmail(email, password);
+      } catch (e) {
+        if (e.message.includes('JWT') || e.message.includes('not exist')) {
+          await db.ensureAuth();
+          await db.linkEmail(email, password);
+        } else {
+          throw e;
+        }
+      }
       closeAuthModal();
       UI.showToast('Account gekoppeld!', 'success');
       updateSyncStatus(await db.getCurrentUser());
