@@ -165,13 +165,15 @@ export function clearBulkPreview() {
 // ── Session ──────────────────────────────────────────────────
 
 export function renderSessionCard(word, state, list) {
-  document.getElementById('session-word').textContent = word.source;
+  const isReverse = word._dir === 'reverse';
+  document.getElementById('session-word').textContent = isReverse ? word.translation : word.source;
+  document.getElementById('session-input').placeholder = isReverse ? 'Typ het bronwoord…' : 'Typ de vertaling…';
 
   const sourceLangEl = document.getElementById('card-source-lang');
   const targetLangEl = document.getElementById('card-target-lang');
   if (list) {
-    sourceLangEl.textContent = list.sourceLang || 'Bronwoord';
-    targetLangEl.textContent = list.targetLang || 'Vertaling';
+    sourceLangEl.textContent = isReverse ? (list.targetLang || 'Vertaling') : (list.sourceLang || 'Bronwoord');
+    targetLangEl.textContent = isReverse ? (list.sourceLang || 'Bronwoord') : (list.targetLang || 'Vertaling');
   } else {
     sourceLangEl.textContent = '';
     targetLangEl.textContent = '';
@@ -195,17 +197,6 @@ export function showReveal(result) {
   document.getElementById('result-user-answer').textContent    = result.typed;
   document.getElementById('result-correct-answer').textContent = result.expected;
 
-  // Highlight the suggested button based on auto-detected result
-  const correctBtn = document.getElementById('btn-confirm-correct');
-  const wrongBtn   = document.getElementById('btn-confirm-wrong');
-  if (result.correct) {
-    correctBtn.classList.remove('btn--override');
-    wrongBtn.classList.add('btn--override');
-  } else {
-    wrongBtn.classList.remove('btn--override');
-    correctBtn.classList.add('btn--override');
-  }
-
   const flashcard = document.getElementById('flashcard');
   flashcard.classList.add('is-flipped');
   flashcard.classList.add(result.correct ? 'result-correct' : 'result-wrong');
@@ -214,9 +205,6 @@ export function showReveal(result) {
 export function hideReveal() {
   const flashcard = document.getElementById('flashcard');
   flashcard.classList.remove('is-flipped', 'result-correct', 'result-wrong');
-  // Reset button styles for next card
-  document.getElementById('btn-confirm-correct').classList.remove('btn--override');
-  document.getElementById('btn-confirm-wrong').classList.remove('btn--override');
 }
 
 export function renderProgress(done, total) {

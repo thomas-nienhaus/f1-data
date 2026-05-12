@@ -16,8 +16,11 @@ function shuffle(arr) {
   return a;
 }
 
-export function initSession(dueWords) {
-  queue = shuffle(dueWords);
+export function initSession(dueWords, dir = 'forward') {
+  queue = shuffle(dueWords).map(w => ({
+    ...w,
+    _dir: dir === 'mixed' ? (Math.random() < 0.5 ? 'forward' : 'reverse') : dir,
+  }));
   currentIndex = 0;
   sessionCorrect = 0;
   sessionWrong = 0;
@@ -39,13 +42,21 @@ export function isSessionComplete() {
 export function submitAnswer(typedText) {
   const word = queue[currentIndex];
   const typed = typedText.trim().toLowerCase();
-  const variants = word.translation
-    .split(/[,\/]/)
-    .map(v => v.trim().toLowerCase())
-    .filter(Boolean);
+  let correct, expected;
 
-  const correct = variants.some(v => v === typed);
-  lastResult = { correct, typed: typedText.trim(), expected: word.translation };
+  if (word._dir === 'reverse') {
+    correct  = word.source.trim().toLowerCase() === typed;
+    expected = word.source;
+  } else {
+    const variants = word.translation
+      .split(/[,\/]/)
+      .map(v => v.trim().toLowerCase())
+      .filter(Boolean);
+    correct  = variants.some(v => v === typed);
+    expected = word.translation;
+  }
+
+  lastResult = { correct, typed: typedText.trim(), expected };
   return lastResult;
 }
 

@@ -138,6 +138,12 @@
 
     <!-- VIEW: Session -->
     <section data-view="session" hidden>
+      <div class="session-direction">
+        <button class="dir-btn dir-btn--active" data-action="set-direction" data-dir="forward">Woord → Vertaling</button>
+        <button class="dir-btn" data-action="set-direction" data-dir="reverse">Vertaling → Woord</button>
+        <button class="dir-btn" data-action="set-direction" data-dir="mixed">Willekeurig</button>
+      </div>
+
       <div class="session-header">
         <div class="progress-bar-wrap">
           <div class="progress-bar" id="progress-bar"></div>
@@ -173,8 +179,7 @@
               </div>
             </div>
             <div class="result-actions">
-              <button class="btn btn--success" id="btn-confirm-correct" data-action="confirm-correct">Ik had het goed ✓</button>
-              <button class="btn btn--danger"  id="btn-confirm-wrong"   data-action="confirm-wrong">Ik had het fout ✗</button>
+              <button class="btn btn--primary btn--large" data-action="next-card">Volgende →</button>
             </div>
           </div>
         </div>

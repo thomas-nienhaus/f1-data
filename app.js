@@ -8,9 +8,11 @@ import * as UI      from './modules/ui.js';
 // ── Bootstrap ────────────────────────────────────────────────
 let allLists = [];
 let allWords = [];
-let activeListId  = null;
-let sessionListId = null;
+let activeListId     = null;
+let sessionListId    = null;
 let pendingBulkPairs = [];
+let sessionDirection = localStorage.getItem('wl_direction') || 'forward';
+let currentWordPool  = [];
 
 function saveDataCache(lists, words, stats) {
   try {
@@ -359,16 +361,23 @@ async function handleAction(action, el) {
     }
 
     case 'submit-answer':
-      handleSubmitAnswer();
+      await handleSubmitAnswer();
       break;
 
-    case 'confirm-correct':
-      await handleConfirmResult(true);
+    case 'next-card':
+      UI.hideReveal();
+      setTimeout(renderCurrentCard, 200);
       break;
 
-    case 'confirm-wrong':
-      await handleConfirmResult(false);
+    case 'set-direction': {
+      sessionDirection = el.dataset.dir;
+      localStorage.setItem('wl_direction', sessionDirection);
+      document.querySelectorAll('.dir-btn').forEach(b => {
+        b.classList.toggle('dir-btn--active', b.dataset.dir === sessionDirection);
+      });
+      startSession(currentWordPool);
       break;
+    }
   }
 }
 
@@ -404,6 +413,7 @@ function closeNewListModal() {
 
 // ── Session ──────────────────────────────────────────────────
 function startSession(wordPool) {
+  currentWordPool = wordPool;
   const today = new Date().toISOString().slice(0, 10);
   const due   = wordPool.filter(w => w.sr.dueDate <= today);
 
@@ -412,7 +422,12 @@ function startSession(wordPool) {
     return;
   }
 
-  Session.initSession(due);
+  // Sync direction button states
+  document.querySelectorAll('.dir-btn').forEach(b => {
+    b.classList.toggle('dir-btn--active', b.dataset.dir === sessionDirection);
+  });
+
+  Session.initSession(due, sessionDirection);
   UI.showView('session');
   renderCurrentCard();
 }
@@ -429,7 +444,7 @@ function renderCurrentCard() {
 
   const word     = Session.getCurrentWord();
   const progress = Session.getProgress();
-  const list     = sessionListId ? Lists.getList(allLists, sessionListId) : null;
+  const list     = sessionListId ? allLists.find(l => l.id === sessionListId) ?? null : null;
 
   UI.renderProgress(progress.done, progress.total);
   UI.renderSessionCard(word, 'question', list);
@@ -440,7 +455,7 @@ function renderCurrentCard() {
   document.getElementById('submit-btn').disabled = false;
 }
 
-function handleSubmitAnswer() {
+async function handleSubmitAnswer() {
   const input = document.getElementById('session-input');
   const typed = input.value.trim();
   if (!typed) { input.focus(); return; }
@@ -449,16 +464,12 @@ function handleSubmitAnswer() {
 
   const result = Session.submitAnswer(typed);
   const word   = Session.getCurrentWord();
-  const list   = sessionListId ? Lists.getList(allLists, sessionListId) : null;
+  const list   = sessionListId ? allLists.find(l => l.id === sessionListId) ?? null : null;
+
+  await Session.confirmResult(result.correct);
 
   UI.renderSessionCard(word, result.correct ? 'revealed-correct' : 'revealed-wrong', list);
   UI.showReveal(result);
-}
-
-async function handleConfirmResult(userSaysCorrect) {
-  await Session.confirmResult(userSaysCorrect);
-  UI.hideReveal();
-  setTimeout(renderCurrentCard, 300);
 }
 
 // ── Auth Modal ───────────────────────────────────────────────
