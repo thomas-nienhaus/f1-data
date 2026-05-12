@@ -175,7 +175,11 @@ export function showSessionModeLabel(free) {
 export function renderSessionCard(word, state, list) {
   const isReverse = word._dir === 'reverse';
   document.getElementById('session-word').textContent = isReverse ? word.translation : word.source;
-  document.getElementById('session-input').placeholder = isReverse ? 'Typ het bronwoord…' : 'Typ de vertaling…';
+  const answerText   = isReverse ? word.source : word.translation;
+  const firstVariant = answerText.split(/[,\/]/)[0].trim();
+  document.getElementById('session-input').placeholder = word.sr.repetitions < 3
+    ? firstVariant
+    : (isReverse ? 'Typ het bronwoord…' : 'Typ de vertaling…');
 
   const sourceLangEl = document.getElementById('card-source-lang');
   const targetLangEl = document.getElementById('card-target-lang');
