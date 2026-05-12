@@ -41,6 +41,7 @@ async function bootstrap() {
     const user = await db.ensureAuth();
     if (!user) { openAuthModal('link'); return; }
     updateSyncStatus(user);
+    UI.setLoadingProgress(40, 'Gegevens laden…');
 
     // Direct tonen vanuit cache — geen Supabase-call nodig
     const cached = loadDataCache();
@@ -53,6 +54,8 @@ async function bootstrap() {
       shownFromCache = true;
     }
 
+    UI.setLoadingProgress(65, 'Ophalen…');
+
     // Verse data parallel ophalen
     const [freshLists, freshWords, freshStats] = await Promise.all([
       Lists.getLists(), Words.getWords(), Stats.getStats(),
@@ -60,6 +63,7 @@ async function bootstrap() {
     allLists = freshLists;
     allWords = freshWords;
     saveDataCache(allLists, allWords, freshStats);
+    UI.setLoadingProgress(90, 'Bijna klaar…');
 
     if (allLists.length === 0) {
       const defaultList = await Lists.createList('Standaard', 'Spaans', 'Nederlands');
@@ -76,6 +80,7 @@ async function bootstrap() {
       UI.showToast('Verbindingsprobleem. Probeer de pagina te herladen.', 'error');
     }
   } finally {
+    UI.setLoadingProgress(100, '');
     UI.showLoading(false);
   }
 }

@@ -3,6 +3,14 @@ let toastTimer = null;
 export function showLoading(visible) {
   const el = document.getElementById('loading-overlay');
   if (el) el.hidden = !visible;
+  if (visible) setLoadingProgress(15, 'Verbinden…');
+}
+
+export function setLoadingProgress(pct, message) {
+  const bar    = document.getElementById('loading-bar');
+  const status = document.getElementById('loading-status');
+  if (bar)             bar.style.width = pct + '%';
+  if (status && message) status.textContent = message;
 }
 
 export function showView(name) {
