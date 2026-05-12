@@ -128,6 +128,9 @@
           <button class="btn btn--sm btn--primary" id="list-session-btn" data-action="start-list-session">
             Sessie starten
           </button>
+          <button class="btn btn--sm btn--secondary" data-action="start-list-free">
+            Vrij oefenen
+          </button>
         </div>
         <ul class="word-list" id="list-word-items"></ul>
         <p class="empty-state" id="list-word-empty" hidden>
@@ -143,6 +146,7 @@
         <button class="dir-btn" data-action="set-direction" data-dir="reverse">Vertaling → Woord</button>
         <button class="dir-btn" data-action="set-direction" data-dir="mixed">Willekeurig</button>
       </div>
+      <p class="session-mode-label" id="session-mode-label" hidden>Vrij oefenen · scores worden niet opgeslagen</p>
 
       <div class="session-header">
         <div class="progress-bar-wrap">
