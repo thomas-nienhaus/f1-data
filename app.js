@@ -36,34 +36,47 @@ function loadDataCache() {
 
 async function bootstrap() {
   UI.showLoading(true);
-  let shownFromCache = false;
+
+  // 1. Cache onmiddellijk tonen — geen netwerkverzoek nodig
+  const cached = loadDataCache();
+  if (cached) {
+    allLists = cached.lists;
+    allWords = cached.words;
+    UI.renderDashboard(allLists, allWords, cached.stats);
+    UI.showView('dashboard');
+    UI.showLoading(false);
+  }
+
+  // 2. Auth met 8s timeout — getSession() kan hangen bij verlopen token
+  let user;
   try {
-    const user = await db.ensureAuth();
-    if (!user) { openAuthModal('link'); return; }
-    updateSyncStatus(user);
-    UI.setLoadingProgress(40, 'Gegevens laden…');
-
-    // Direct tonen vanuit cache — geen Supabase-call nodig
-    const cached = loadDataCache();
-    if (cached) {
-      allLists = cached.lists;
-      allWords = cached.words;
-      UI.renderDashboard(allLists, allWords, cached.stats);
-      UI.showView('dashboard');
+    user = await Promise.race([
+      db.ensureAuth(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('auth-timeout')), 8000)
+      ),
+    ]);
+  } catch (e) {
+    if (!cached) {
       UI.showLoading(false);
-      shownFromCache = true;
+      UI.showToast('Verbindingsprobleem. Probeer de pagina te herladen.', 'error');
     }
+    return;
+  }
 
+  UI.showLoading(false);
+  if (!user) { openAuthModal('link'); return; }
+  updateSyncStatus(user);
+
+  // 3. Verse data ophalen op de achtergrond
+  try {
     UI.setLoadingProgress(65, 'Ophalen…');
-
-    // Verse data parallel ophalen
     const [freshLists, freshWords, freshStats] = await Promise.all([
       Lists.getLists(), Words.getWords(), Stats.getStats(),
     ]);
     allLists = freshLists;
     allWords = freshWords;
     saveDataCache(allLists, allWords, freshStats);
-    UI.setLoadingProgress(90, 'Bijna klaar…');
 
     if (allLists.length === 0) {
       const defaultList = await Lists.createList('Standaard', 'Spaans', 'Nederlands');
@@ -75,13 +88,8 @@ async function bootstrap() {
     UI.renderDashboard(allLists, allWords, freshStats);
     UI.showView('dashboard');
   } catch (e) {
-    console.error('Bootstrap mislukt:', e);
-    if (!shownFromCache) {
-      UI.showToast('Verbindingsprobleem. Probeer de pagina te herladen.', 'error');
-    }
-  } finally {
-    UI.setLoadingProgress(100, '');
-    UI.showLoading(false);
+    console.error('Data ophalen mislukt:', e);
+    if (!cached) UI.showToast('Verbindingsprobleem. Probeer de pagina te herladen.', 'error');
   }
 }
 
