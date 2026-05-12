@@ -13,6 +13,7 @@ let sessionListId    = null;
 let pendingBulkPairs = [];
 let sessionDirection = localStorage.getItem('wl_direction') || 'forward';
 let currentWordPool  = [];
+let isFreeMode       = false;
 
 function saveDataCache(lists, words, stats) {
   try {
@@ -350,13 +351,21 @@ async function handleAction(action, el) {
       const listId = el.dataset.listId || document.getElementById('list-detail-id').value;
       sessionListId = listId;
       const words = await Words.getWordsByList(listId);
-      startSession(words);
+      startSession(words, false);
+      break;
+    }
+
+    case 'start-list-free': {
+      const listId = el.dataset.listId || document.getElementById('list-detail-id').value;
+      sessionListId = listId;
+      const words = await Words.getWordsByList(listId);
+      startSession(words, true);
       break;
     }
 
     case 'start-all-session': {
       sessionListId = null;
-      startSession(allWords);
+      startSession(allWords, false);
       break;
     }
 
@@ -375,7 +384,7 @@ async function handleAction(action, el) {
       document.querySelectorAll('.dir-btn').forEach(b => {
         b.classList.toggle('dir-btn--active', b.dataset.dir === sessionDirection);
       });
-      startSession(currentWordPool);
+      startSession(currentWordPool, isFreeMode);
       break;
     }
   }
@@ -412,14 +421,24 @@ function closeNewListModal() {
 }
 
 // ── Session ──────────────────────────────────────────────────
-function startSession(wordPool) {
+function startSession(wordPool, free = false) {
   currentWordPool = wordPool;
-  const today = new Date().toISOString().slice(0, 10);
-  const due   = wordPool.filter(w => w.sr.dueDate <= today);
+  isFreeMode = free;
 
-  if (due.length === 0) {
-    UI.showToast('Geen woorden te herhalen vandaag!', '');
-    return;
+  let pool;
+  if (free) {
+    pool = wordPool;
+    if (pool.length === 0) {
+      UI.showToast('Geen woorden in deze lijst!', '');
+      return;
+    }
+  } else {
+    const today = new Date().toISOString().slice(0, 10);
+    pool = wordPool.filter(w => w.sr.dueDate <= today);
+    if (pool.length === 0) {
+      UI.showToast('Geen woorden te herhalen vandaag!', '');
+      return;
+    }
   }
 
   // Sync direction button states
@@ -427,7 +446,8 @@ function startSession(wordPool) {
     b.classList.toggle('dir-btn--active', b.dataset.dir === sessionDirection);
   });
 
-  Session.initSession(due, sessionDirection);
+  Session.initSession(pool, sessionDirection);
+  UI.showSessionModeLabel(free);
   UI.showView('session');
   renderCurrentCard();
 }
@@ -466,7 +486,11 @@ async function handleSubmitAnswer() {
   const word   = Session.getCurrentWord();
   const list   = sessionListId ? allLists.find(l => l.id === sessionListId) ?? null : null;
 
-  await Session.confirmResult(result.correct);
+  if (isFreeMode) {
+    Session.advanceWithoutSR(result.correct);
+  } else {
+    await Session.confirmResult(result.correct);
+  }
 
   UI.renderSessionCard(word, result.correct ? 'revealed-correct' : 'revealed-wrong', list);
   UI.showReveal(result);

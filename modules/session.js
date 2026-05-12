@@ -83,6 +83,12 @@ export function getSessionSummary() {
   };
 }
 
+export function advanceWithoutSR(correct) {
+  if (correct) sessionCorrect += 1;
+  else sessionWrong += 1;
+  currentIndex += 1;
+}
+
 export function getLastResult() {
   return lastResult;
 }

@@ -47,7 +47,10 @@ export function renderDashboard(lists, allWords, stats) {
         </div>
         <div class="list-card__actions">
           <button class="btn btn--sm btn--primary" data-action="start-list-session" data-list-id="${list.id}" ${due === 0 ? 'disabled' : ''}>
-            Start
+            Start${due > 0 ? ` (${due})` : ''}
+          </button>
+          <button class="btn btn--sm btn--secondary" data-action="start-list-free" data-list-id="${list.id}">
+            Vrij
           </button>
           <button class="btn btn--sm btn--secondary" data-action="open-list" data-list-id="${list.id}">
             Beheer
@@ -164,10 +167,19 @@ export function clearBulkPreview() {
 
 // ── Session ──────────────────────────────────────────────────
 
+export function showSessionModeLabel(free) {
+  const el = document.getElementById('session-mode-label');
+  if (el) el.hidden = !free;
+}
+
 export function renderSessionCard(word, state, list) {
   const isReverse = word._dir === 'reverse';
   document.getElementById('session-word').textContent = isReverse ? word.translation : word.source;
-  document.getElementById('session-input').placeholder = isReverse ? 'Typ het bronwoord…' : 'Typ de vertaling…';
+  const answerText   = isReverse ? word.source : word.translation;
+  const firstVariant = answerText.split(/[,\/]/)[0].trim();
+  document.getElementById('session-input').placeholder = word.sr.repetitions < 3
+    ? firstVariant
+    : (isReverse ? 'Typ het bronwoord…' : 'Typ de vertaling…');
 
   const sourceLangEl = document.getElementById('card-source-lang');
   const targetLangEl = document.getElementById('card-target-lang');
