@@ -21,7 +21,9 @@ export function applyResult(word, correct) {
   const today = getTodayString();
 
   if (correct) {
-    sr.interval = Math.max(1, Math.round(sr.interval * sr.easeFactor));
+    sr.interval = sr.repetitions === 0
+      ? 1
+      : Math.max(1, Math.round(sr.interval * sr.easeFactor));
     sr.easeFactor = Math.min(4.0, sr.easeFactor + 0.1);
     sr.repetitions += 1;
     sr.totalCorrect += 1;
